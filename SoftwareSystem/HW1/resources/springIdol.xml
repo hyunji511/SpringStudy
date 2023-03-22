@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 2. namespace "c","p" 설정 -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- ==================================================================== -->
+	<!-- Spring Idol talent compitition class -->
+	<!-- ==================================================================== -->
+	
+	<!-- performers에 두 명의 가수 singerA와 singerB를 경연에 참가시킨다. -->
+	<bean id="springIdol" class="com.example.springidol.SpringIdol">
+		<property name="performers">
+			<list>
+				<ref bean="duke" />
+				<ref bean="kenny" />
+				<ref bean="hank" />
+				<ref bean="singerA" /> <!-- 추가 -->
+				<ref bean="singerB" /> <!-- 추가 -->
+			</list>
+		</property>
+	</bean>
+
+	<!-- ==================================================================== -->
+	<!-- Performers -->
+	<!-- ==================================================================== -->
+
+	<!-- 2. duke 와 kenny 에 대한 DI 설정을 “c” 와 “p” namespace 를 이용하여 간략하게 표현한다 -->
+	<bean id="duke" class="com.example.springidol.PoeticJuggler"
+		c:poem-ref="sonnet29" /> <!-- "c" namespace 이용 -->
+		
+
+	<!-- 1. kenny 가 saxophone 대신 guitar 를 연주하도록 변경한다.
+		 2. duke 와 kenny 에 대한 DI 설정을 “c” 와 “p” namespace 를 이용하여 간략하게 표현한다 -->
+	<bean id="kenny" class="com.example.springidol.Instrumentalist"
+		p:song="Jingle Bells"
+		p:instrument-ref="guitar" /> <!-- "p" namespace 이용 -->
+
+	<!-- 3.OneManBand 클래스에서 “instruments” property 를 Map<String, Instrument> 타입으로 수정하고,
+			perform() method 도 알맞게 수정한다.
+			그리고 hank bean 이 harmonica, cymbal, saxophone을 동시에 연주하도록 변경한다 -->
+	<!-- props에서 map으로 변경 -->
+	<bean id="hank" class="com.example.springidol.OneManBand">
+		<property name="instruments">
+			<map>
+			<entry>
+				<key><value>HARMONIC</value></key> 
+				<ref bean="harmonica" />
+			</entry>
+			<entry key="CYMBAL" value-ref="cymbal" />
+			<entry key="SAXOPHONE" value-ref="saxophone" />
+			</map>
+		</property>
+	</bean>
+	
+	<!-- 두 명의 가수 bean을 생성해 경연에 참가시킨다.
+		Singer는 Constructor를 이용한 DI로 설정한다.-->
+	<bean id="singerA" class="com.example.springidol.Singer">
+		<constructor-arg value ="Chris kim"/>
+		<constructor-arg ref = "song1"/>
+		<constructor-arg ref = "piano"/>
+	</bean>
+	<bean id="singerB" class="com.example.springidol.Singer">
+		<constructor-arg value="Jain"/>
+		<constructor-arg value = "#{singerA.getSong()}"/><!-- singerB는 항상 singerA가 선택한 곡을 따라 부른다 -->
+	</bean>
+	
+	<!-- 두 개의 곡 bean을 생성한다. 
+	 	Song은 Setter를 이용한 DI로 설정한다.-->
+	<bean id="song1" class="com.example.springidol.Song">
+		<property name="title" value="Bohemian Rhapsody"/>
+		<property name="artist" value="Queen"/>
+	</bean>
+	<bean id="song2" class="com.example.springidol.Song">
+		<property name="title" value="Roommates"/>
+		<property name="artist" value="Isac Elliot"/>
+	</bean>
+	 
+	<bean id="sonnet29" class="com.example.springidol.Sonnet29" />
+	
+	
+	<!-- 앵콜 공연을 위한 encore bean을 설정한다. 앵콜 공연자는 공연 참가자들 중 임의로 한 명이 선택되도록 한다. -->	
+	<bean id="encore" class="com.example.springidol.Encore"
+	p:encorePerformer="#{springIdol.performers[T(java.lang.Math).random()*springIdol.performers.length]}"/>
+		
+	
+	<!-- ==================================================================== -->
+	<!-- Instruments performers can use -->
+	<!-- ==================================================================== -->
+	<bean id="harmonica" class="com.example.springidol.Harmonica" />
+	<bean id="cymbal" class="com.example.springidol.Cymbal" />
+	<bean id="guitar" class="com.example.springidol.Guitar" />
+	<bean id="saxophone" class="com.example.springidol.Saxophone" />
+	<bean id="piano" class="com.example.springidol.Piano" /><!-- 4. piano bean 을 정의한다. -->
+	
+	
+
+</beans>
