@@ -1,0 +1,314 @@
+
+
+1. kenny 가 saxophone 대신 guitar 를 연주하도록 변경한다.
+
+[ 수정 코드 ]
+springIdol.xml 
+- 1 이미지
+
+
+[ 실행 결과 ]
+Performance #2
+Playing Jingle Bells : STRUM STRUM STRUM~~
+
+ 
+
+
+2. duke 와 kenny 에 대한 DI 설정을 “c” 와 “p” namespace 를 이용하여 간략하게 표현한다.
+
+[ 수정 코드 ]
+springIdol.xml
+- 2,2_1 이미지
+
+ 
+
+[ 실행 결과 ]
+변화 없음
+
+ 
+
+
+3. OneManBand 클래스에서 “instruments” property 를 Map<string, instrument=""> 타입으로 수정하고, perform() method 도 알맞게 수정한다. 그리고 hank bean 이 harmonica, cymbal, saxophone 을 동시에 연주하도록 변경한다.
+
+ 
+[ 수정 코드 ]
+1)  oneManBand.java
+import java.util.Map;//map 객체 사용 위해 import
+
+//3. OneManBand 클래스에서 “instruments” property 를 Map<String, Instrument> 타입으로 수정
+public class OneManBand implements Performer {
+   private Map<String,Instrument> instruments; // Map 타입 property
+
+   public OneManBand() {
+   }
+
+   public void setInstruments(Map<String,Instrument> instruments) {
+      this.instruments = instruments;
+      }
+
+   //perform() method 도 알맞게 수정한다
+   @Override
+   public void perform() throws PerformanceException {
+      for (String key : instruments.keySet()) {
+         System.out.print(key + " : "); //입력받은 악기의 이름(key)
+         Instrument instrument = instruments.get(key); //입력받은 악기에 대한 소리(value)를 받아옴
+         instrument.play(); //출력
+      }
+   }
+
+}
+
+2) springIdol.xml
+- 3_2 이미지
+
+[ 실행 결과 ]
+Performance #3
+HARMONIC : HUM HUM HUM~~
+CYMBAL : CRASH CRASH CRASH~~
+SAXOPHONE : TOOT TOOT TOOT~~
+
+
+
+4. Piano 클래스를 정의하고 piano bean을 정의한다. Piano 의 play()는 "PLANK PLANK PLANK~~"를 
+출력한다.
+
+[ 수정 코드 ]
+1) piano.java (클래스 추가)
+//4. Piano 클래스를 정의하고 piano bean 을 정의한다. Piano 의 play()는 "PLANK PLANK PLANK~~"를 출력한다.
+public class Piano implements Instrument, InstrumentForSinger{
+   public Piano() {}
+   
+   public void play() {
+      System.out.println("PLANK PLANK PLANK~~");
+   }
+}
+
+2) springIdol.xml
+- 4 이미지
+
+[ 실행 결과 ]
+Performance #4
+Chris kim is singing a song Bohemian Rhapsody by Queen.
+while palying Piano : PLANK PLANK PLANK~~
+
+
+5. 곡(Song)과 가수(Singer)를 나타내는 새로운 클래스를 아래와 같이 정의한다.
+◼ Song은 제목(title)과 원곡자(artist) 이름을 속성(property)으로 갖는다.
+◼ Singer는 Performer의 일종으로, 이름과 곡 정보를 갖는다. 곡은 위에서 정의한 Song
+클래스의 객체를 참조한다. 가수는 공연할 때 자신의 이름과 곡에 관한 모든 정보를 출력한다.
+✓ 예: Chris is singing a song Bohemian Rhapsody by Queen.
+◼ 두 개 이상의 곡과 두 명 이상의 가수를 나타내는 bean들을 생성하여 경연에 참가시킨다.
+✓ 단, Song은 Setter를 이용한 DI, Singer는 Constructor를 이용한 DI로 설정한다.
+✓ 가수 B는 특정 곡을 지정하지 않고 항상 가수 A가 선택한(지정된) 곡을 따라 부르도록
+설정해 본다.
+◼ Singer가 노래를 부르면서 guitar나 piano를 연주할 수도 있도록 클래스를 수정한다. bean을
+설정할 때 두 악기 중 하나를 지정한다. 공연 시에는 지정된 악기의 이름과 악기 소리를 함께
+출력해야 한다.
+
+[ 수정 코드]
+1) song.java (클래스 추가)
+public class Song{
+   private String title;
+   private String artist;
+   public Song() {   }
+
+   
+   public String getTitle() { //singer에서 참조할 수 있게 getter 설정
+      return title;
+   }
+   public void setTitle(String title) { //setter을 이용한 DI
+      this.title = title;
+   }
+   public String getArtist() {
+      return artist;
+   }
+   public void setArtist(String artist) { //setter을 이용한 DI
+      this.artist = artist;
+   }
+}
+
+2) Singer.java (클래스 추가)
+public class Singer implements Performer, InstrumentForSinger{
+     private String name;  // 이름
+     private Song song; // 곡 정보
+     // Singer 클래스 내에 InstrumentForSinger 타입의 필드와 그것을 고려한 생성자도 추가로 정의
+     private InstrumentForSinger instrument; 
+   
+     public Singer(String name, Song song) { //생성자를 이용한 DI 설정
+        this.name = name;
+        this.song = song;
+     }
+   
+      // 
+     public Singer(String name, Song song, InstrumentForSinger instrument) { 
+        this.name = name;
+        this.song = song;
+        this.instrument = instrument;
+     }
+     
+     public String getName() {
+      return name;
+   }
+
+
+   public void setName(String name) {
+      this.name = name;
+   }
+
+   //private인 song을 내보내기 위해 사용
+   public Song getSong() {
+      return song;
+   }
+
+
+   public void setSong(Song song) {
+      this.song = song;
+   }
+
+
+   @Override
+     public void perform() throws PerformanceException {
+      System.out.println(name + " is singing a song " + song.getTitle() + " by " + song.getArtist() + ".");
+
+      //Piano 객체가 참조된 경우 (instrument가 참조된 경우) - 소리 출력
+      if(instrument != null) {
+         System.out.print("while palying Piano : ");
+         instrument.play();
+      }
+     }
+   
+   @Override
+   public void play() {
+      
+   };
+   
+}
+
+3) InstrumentForSinger.java (인터페이스 추가)
+public interface InstrumentForSinger {
+   public void play();
+}
+
+4) springIdol.xml
+- 5 이미지 
+
+5) piano.java
+public class Piano implements Instrument, InstrumentForSinger{
+   //singer에서 소리를 출력할 수 있도록 instrumentForSinger 상속
+   public Piano() {}
+   
+   public void play() {
+      System.out.println("PLANK PLANK PLANK~~");
+   }
+}
+
+6) guitar.java
+public class Guitar implements Instrument, InstrumentForSinger{
+   //singer에서 소리를 출력할 수 있도록 instrumentForSinger 상속
+   public Guitar() {
+   }
+
+   public void play() {
+      System.out.println("STRUM STRUM STRUM~~");
+   }
+}
+
+
+[ 실행 결과 ]
+Performance #4
+Chris kim is singing a song Bohemian Rhapsody by Queen.
+while palying Piano : PLANK PLANK PLANK~~
+-----------------------
+Performance #5
+Jain is singing a song Bohemian Rhapsody by Queen.
+
+
+
+6. 앵콜 공연을 위한 Encore 클래스를 정의하고 encore bean 을 설정한다. (class diagram 참조)
+◼ Encore 는 앵콜 공연을 할 특정 공연자 정보와 앵콜 공연을 실시하기 위한 메소드를 갖는다.
+◼ 앵콜 공연자는 특정 공연자를 직접 선택(지정)하거나, 또는 공연 참가자들 중 임의로(random) 한 명이 지정되도록 한다.
+
+[ 수정 코드 ]
+1) Encore.java(클래스 생성)
+public class Encore {
+   private Performer encorePerformer; // 공연 참가자들 중 한 명이 앵콜 공연
+      
+      public Encore() {
+      }
+      
+      // setter method를 이용한 bean 생성
+      public void setEncorePerformer(Performer encorePerformer) {
+         this.encorePerformer = encorePerformer;
+      }
+      
+      public void execute() {
+         System.out.println("<Encore Performance>");
+         encorePerformer.perform();
+      }
+   }
+
+2) springIdol.xml
+- 이미지 6
+
+[ 출력 결과 ]
+<Encore Performance>
+Chris kim is singing a song Bohemian Rhapsody by Queen.
+while palying Piano : PLANK PLANK PLANK~~
+
+
+
+7. 참가자들의 공연이 모두 끝난 후 encore bean 을 이용하여 앵콜 공연을 실시하도록
+SpringIdolMain 의 main() 메소드를 수정한다.
+
+[ 수정 코드 ]
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringIdolMain {
+   public static void main(String[] args) {
+      ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("springIdol.xml");
+
+      TalentCompetition competition = ctx.getBean("springIdol", TalentCompetition.class);
+      Encore encore = ctx.getBean("encore", Encore.class); // encore bean 가져오는 추가 코드
+      competition.run();
+      encore.execute(); // 참가자들의 공연이 모두 끝난 후 앵콜 공연 실시하기 위한 추가 코드
+      ctx.close();
+   }
+}
+
+[ 출력 결과 ]
+Performance #1
+JUGGLING 3 BEANBAGS
+While reciting...
+When, in disgrace with fortune and men's eyes,
+I all alone beweep my outcast state
+And trouble deaf heaven with my bootless cries
+And look upon myself and curse my fate,
+Wishing me like to one more rich in hope,
+Featured like him, like him with friends possess'd,
+Desiring this man's art and that man's scope,
+With what I most enjoy contented least;
+Yet in these thoughts myself almost despising,
+Haply I think on thee, and then my state,
+Like to the lark at break of day arising
+From sullen earth, sings hymns at heaven's gate;
+For thy sweet love remember'd such wealth brings
+That then I scorn to change my state with kings.
+-----------------------
+Performance #2
+Playing Jingle Bells : STRUM STRUM STRUM~~
+-----------------------
+Performance #3
+HARMONIC : HUM HUM HUM~~
+CYMBAL : CRASH CRASH CRASH~~
+SAXOPHONE : TOOT TOOT TOOT~~
+-----------------------
+Performance #4
+Chris kim is singing a song Bohemian Rhapsody by Queen.
+while palying Piano : PLANK PLANK PLANK~~
+-----------------------
+Performance #5
+Jain is singing a song Bohemian Rhapsody by Queen.
+-----------------------
+<Encore Performance>
+Chris kim is singing a song Bohemian Rhapsody by Queen.
+while palying Piano : PLANK PLANK PLANK~~
